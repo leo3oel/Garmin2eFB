@@ -51,9 +51,9 @@ def convertcsv(input):
     for index, item in enumerate(garmin_csv):
         startdatum = f"{item[1].day}.{item[1].month}.{item[1].year}"
         enddatum = startdatum
-        startzeit = f"{item[1].hour}:{item[1].minute}"
+        startzeit = item[1].strftime('%H:%M')
         endzeitdatetime = item[1] + timedelta(hours=item[4].hour, minutes=item[4].minute)
-        endzeit = f"{endzeitdatetime.hour}:{endzeitdatetime.minute}"
+        endzeit = endzeitdatetime.strftime('%H:%M') 
         gewaesser = "gewässer"
         
         # get startort:

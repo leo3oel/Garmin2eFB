@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "fahrtenbuch-generator"
+version = "0.1.0"
+description = "Convert Garmin Data to an eFB compatible Fahrtenbuch"
+authors = ["Leonhard Schraut <spammailspam@aol.de>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

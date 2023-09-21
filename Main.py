@@ -4,6 +4,7 @@ from tkinter.filedialog import askopenfile
 import configparser, locale
 
 from GarminEntry import GarminEntry
+from Gui import MainGui
 
 class Main:
     
@@ -12,7 +13,10 @@ class Main:
     def __init__(self) -> None:
         self.__readConfig()
         self.__readGarminFile()
-        pass
+        self.__mainGui = MainGui()
+        self.__getEntriesToInclude()
+        self.__mainGui.multipleEntry(self.__garminEntries[:3])
+        self.__mainGui.mainloop()
 
     def __readConfig(self) -> None:
         config = configparser.ConfigParser()
@@ -23,7 +27,7 @@ class Main:
 
     def __readGarminFile(self) -> None:
         fileName = askopenfile()
-        with open (fileName.name) as garminFile:
+        with open (fileName.name, encoding="utf-8") as garminFile:
             garminCsv = list(csv.reader(garminFile))
         self.__createEntries(garminCsv)
 
@@ -48,6 +52,10 @@ class Main:
         words = title.split(" ")
         place = " ".join(words[:-1])
         return place
+
+    def __getEntriesToInclude(self) -> None:
+        return None
+        startDate, endDate = self.__mainGui.getStartAndEndDate()
 
 
 if __name__ == "__main__":

@@ -15,6 +15,15 @@ class GarminEntry:
         endTime = startDate + timedelta(hours=duration.hour, minutes=duration.minute)
         return endTime
     
+    def getPlace(self) -> str:
+        return self.__place
+    
+    def getStartDate(self) -> str:
+        return self.__startDate.strftime('%d.%m.%Y')
+    
+    def getDistance(self) -> str:
+        return str(self.__distance)
+    
     def setUserValues(self, startPlace: str, endPlace: str, status: str, river: str) -> None:
         self.__startPlace = startPlace
         self.__endPlace = endPlace

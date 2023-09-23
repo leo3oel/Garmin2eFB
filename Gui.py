@@ -44,7 +44,7 @@ class MainGui(tk.Tk):
     def getStartAndEndDate(self):
         dateSelection = DateSelection(self, "Timeframe Selection")
         return dateSelection.result
-    
+
     def multipleEntry(self, listOfGarminEntries):
         self.__clearMainFrame()
         infoLB = tk.Label(self.__mainFrame, 
@@ -56,11 +56,13 @@ Select all activities with same start- and endplace.")
         multipleEntriesFrame.pack(anchor=tk.N)
         self.__addFirstRowMultipleEntry(multipleEntriesFrame)
         self.__multipleEntriesSelection = []
-        for row, entry in enumerate(listOfGarminEntries):
-            row = row+1
+        row = 1
+        for entry in listOfGarminEntries:
             singleEntry = self.__addSingleEntryToList(entry, multipleEntriesFrame, row)
-            self.__multipleEntriesSelection.append(singleEntry + [None]) #TODO: use this None variable as a group number.
-
+            self.__multipleEntriesSelection.append(singleEntry)
+            row = row+1
+        self.__addEntryFields(listOfGarminEntries[0])
+        self.__addControlButtons(True)
         """
         TODO:
         entry fields for places/river
@@ -70,6 +72,69 @@ Select all activities with same start- and endplace.")
 
         Call entry fields from inside main gui to make going back and forth between multiple entries and singlenetries possible
         """
+
+    def __addEntryFields(self, entry):
+        self.__startPlaceVar = tk.StringVar()
+        self.__endPlaceVar = tk.StringVar()
+        self.__riverVar = tk.StringVar()
+        self.__insertValues(entry)
+        entFrame = tk.Frame(self.__mainFrame)
+        entFrame.pack(anchor=tk.N)
+        startPlaceLB = tk.Label(entFrame, text="Start Place")
+        startPlaceLB.grid(row=0, column=0, padx=5, pady=5)
+        startPlaceEnt = tk.Entry(entFrame, textvariable=self.__startPlaceVar)
+        startPlaceEnt.grid(row=0, column=1, padx=5, pady=5)
+        endPlaceLB = tk.Label(entFrame, text="End Place")
+        endPlaceLB.grid(row=1, column=0, padx=5, pady=5)
+        endPlaceEnt = tk.Entry(entFrame, textvariable=self.__endPlaceVar)
+        endPlaceEnt.grid(row=1, column=1, padx=5, pady=5)
+        riverLB = tk.Label(entFrame, text="River")
+        riverLB.grid(row=2, column=0, padx=5, pady=5)
+        riverEnt = tk.Entry(entFrame, textvariable=self.__riverVar)
+        riverEnt.grid(row=2, column=1, padx=5, pady=5)
+
+    def __addControlButtons(self, multiple=False):
+        btnFrame = tk.Frame(self.__mainFrame)
+        btnFrame.pack(anchor=tk.N)
+        previousBtn = tk.Button(btnFrame, text="Previous", command=self.__previousEntry)
+        previousBtn.grid(row=0, column=0, pady=5, padx=5)
+        if multiple: 
+            saveTogetherBtn = tk.Button(btnFrame, text="Save Selected", command=self.__saveSelected)
+            saveTogetherBtn.grid(row=0, column=1, pady=5, padx=5)
+        nextBtn = tk.Button(btnFrame, text="Next", command=self.__nextEntry)
+        nextBtn.grid(row=0, column=2, pady=5, padx=5)
+
+    def __insertValues(self, entry):
+        if entry.startPlace:
+            self.__startPlaceVar = entry.startPlace
+            self.__endPlaceVar = entry.endPlace
+            self.__riverVar = entry.river
+
+    def __previousEntry(self):
+        pass
+
+    def __nextEntry(self):
+        pass
+
+    def __saveSelected(self):
+        leftOverEntries = []
+        for entry in self.__multipleEntriesSelection:
+            if entry[1].get() == 1:
+                self.__saveSingleEntry(entry[0])
+            else:
+                leftOverEntries.append(entry[0])
+        if leftOverEntries:
+            self.multipleEntry(leftOverEntries)
+        else:
+            self.__nextEntry()
+
+    def __saveSingleEntry(self, entry):
+        entry.setUserValues(
+            self.__startPlaceVar.get(),
+            self.__endPlaceVar.get(),
+            "beendet",
+            self.__riverVar.get()
+        )
 
     def __addSingleEntryToList(self, entry, frame, row):
         startDateLB = tk.Label(frame, text=entry.getStartDate())

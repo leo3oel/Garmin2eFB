@@ -44,6 +44,23 @@ class MainGui(tk.Tk):
     def getStartAndEndDate(self):
         dateSelection = DateSelection(self, "Timeframe Selection")
         return dateSelection.result
+    
+    def startUserInput(self, multiEntries, singleEntries):
+        self.__currentMultiEntry = 0
+        self.__currentSingleEntry = 0
+        self.__multiEntries = multiEntries
+        self.__singleEntries = singleEntries
+        if len(multiEntries) > self.__currentMultiEntry:
+            self.multipleEntry(multiEntries[0])
+        elif len(singleEntries) > self.__currentSingleEntry:
+            self.singleEntry(singleEntries[0])
+
+    def singleEntry(self, entry):
+        self.__clearMainFrame()
+        singleEntriesFrame = tk.Frame(self.__mainFrame)
+        singleEntriesFrame.pack(anchor=tk.N)
+        self.__addEntryFields(entry)
+        self.__addControlButtons()
 
     def multipleEntry(self, listOfGarminEntries):
         self.__clearMainFrame()
@@ -111,10 +128,35 @@ Select all activities with same start- and endplace.")
             self.__riverVar = entry.river
 
     def __previousEntry(self):
-        pass
+        if (self.__currentMultiEntry>=0) and (self.__currentMultiEntry != len(self.__multiEntries)):
+            leftOverEntries = self.__saveSelected()
+            if not leftOverEntries:
+                self.__currentMultiEntry -= 1
+                self.multipleEntry(self.__multiEntries[self.__currentMultiEntry])
+        elif self.__currentSingleEntry>0:
+            self.__saveSingleEntry(self.__singleEntries(self.__currentSingleEntry))
+            self.__currentSingleEntry -= 1
+            self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
+        elif self.__currentSingleEntry == 0:
+            self.__saveSingleEntry(self.__singleEntries(self.__currentSingleEntry))
+            self.__currentMultiEntry -= 1
+            self.multipleEntry(self.__multiEntries[self.__currentMultiEntry])
 
     def __nextEntry(self):
-        pass
+        if self.__currentMultiEntry < len(self.__multiEntries)-1:
+            leftoverEntries = self.__saveSelected()
+            if not leftoverEntries:
+                self.__currentMultiEntry += 1
+                self.multipleEntry(self.__multiEntries[self.__currentMultiEntry])
+        elif self.__currentMultiEntry == len(self.__multiEntries)-1:
+            leftoverEntries = self.__saveSelected()
+            if not leftoverEntries:
+                self.__currentMultiEntry += 1
+                self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
+        elif self.__currentSingleEntry < len(self.__singleEntries)-1:
+            self.__saveSingleEntry(self.__singleEntries[self.__currentSingleEntry])
+            self.__currentSingleEntry+=1
+            self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
 
     def __saveSelected(self):
         leftOverEntries = []
@@ -125,8 +167,10 @@ Select all activities with same start- and endplace.")
                 leftOverEntries.append(entry[0])
         if leftOverEntries:
             self.multipleEntry(leftOverEntries)
+            return True
         else:
             self.__nextEntry()
+        return False
 
     def __saveSingleEntry(self, entry):
         entry.setUserValues(

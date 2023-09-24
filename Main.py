@@ -9,13 +9,16 @@ from Gui import MainGui
 class Main:
     
     __garminEntries = []
+    __multiEntries = []
+    __singleEntries = []
 
     def __init__(self) -> None:
         self.__readConfig()
         self.__readGarminFile()
         self.__mainGui = MainGui()
         self.__getEntriesToInclude()
-        self.__mainGui.multipleEntry(self.__garminEntries[:3])
+        self.__sortEntries()
+        self.__mainGui.startUserInput(self.__multiEntries, self.__singleEntries)
         self.__mainGui.mainloop()
 
     def __readConfig(self) -> None:
@@ -43,6 +46,21 @@ class Main:
                         locale.atof(row[int(self.__garminRows['distance'])])
                     )
                 )
+
+    def __sortEntries(self) -> None:
+        ignoreList =[]
+        for index, entry in enumerate(self.__garminEntries):
+            multiEntries = [entry]
+            ignoreList.append(entry)
+            for innerLoopIndex in range(index+1, len(self.__garminEntries)):
+                innerEntry = self.__garminEntries[innerLoopIndex]
+                if innerEntry.getPlace() == entry.getPlace() and innerEntry not in ignoreList:
+                    multiEntries.append(innerEntry)
+                    ignoreList.append(innerEntry)
+            if len(multiEntries) > 1:
+                self.__multiEntries.append(multiEntries)
+            else:
+                self.__singleEntries.append(entry)
 
     def __formatDate(self, stringDate) -> datetime.date:
         date = datetime.strptime(stringDate, '%Y-%m-%d %H:%M:%S')

@@ -3,6 +3,44 @@ from tkinter import simpledialog
 from tkinter import messagebox
 from datetime import datetime
 
+class Scrollable(tk.Frame):
+    """
+       Make a frame scrollable with scrollbar on the right.
+       After adding or removing widgets to the scrollable frame,
+       call the update() method to refresh the scrollable area.
+    """
+
+    def __init__(self, frame, width=16):
+
+        scrollbar = tk.Scrollbar(frame, width=width)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y, expand=False)
+
+        self.canvas = tk.Canvas(frame, yscrollcommand=scrollbar.set)
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar.config(command=self.canvas.yview)
+
+        self.canvas.bind('<Configure>', self.__fill_canvas)
+
+        # base class initialization
+        tk.Frame.__init__(self, frame)
+
+        # assign this obj (the inner frame) to the windows item of the canvas
+        self.windows_item = self.canvas.create_window(0,0, window=self, anchor=tk.NW)
+
+
+    def __fill_canvas(self, event):
+        "Enlarge the windows item to the canvas width"
+
+        canvas_width = event.width
+        self.canvas.itemconfig(self.windows_item, width = canvas_width)
+
+    def update(self):
+        "Update the canvas and the scrollregion"
+
+        self.update_idletasks()
+        self.canvas.config(scrollregion=self.canvas.bbox(self.windows_item))
+
 class DateSelection(simpledialog.Dialog):
     
     def body(self, parent):
@@ -64,12 +102,14 @@ class MainGui(tk.Tk):
 
     def multipleEntry(self, listOfGarminEntries):
         self.__clearMainFrame()
-        infoLB = tk.Label(self.__mainFrame, 
+        self.__scrollable = Scrollable(self.__mainFrame)
+        self.__scrollable.pack()
+        infoLB = tk.Label(self.__scrollable, 
                           text="\
 There are multiple activities at the same place.\n \
 Select all activities with same start- and endplace.")
         infoLB.pack(anchor=tk.N)
-        multipleEntriesFrame = tk.Frame(self.__mainFrame)
+        multipleEntriesFrame = tk.Frame(self.__scrollable)
         multipleEntriesFrame.pack(anchor=tk.N)
         self.__addFirstRowMultipleEntry(multipleEntriesFrame)
         self.__multipleEntriesSelection = []
@@ -80,6 +120,7 @@ Select all activities with same start- and endplace.")
             row = row+1
         self.__addEntryFields(listOfGarminEntries[0])
         self.__addControlButtons(True)
+        self.__scrollable.update()
         """
         TODO:
         entry fields for places/river
@@ -90,12 +131,14 @@ Select all activities with same start- and endplace.")
         Call entry fields from inside main gui to make going back and forth between multiple entries and singlenetries possible
         """
 
-    def __addEntryFields(self, entry):
+    def __addEntryFields(self, entry, frame=None):
+        if not frame:
+            frame = self.__mainFrame
         self.__startPlaceVar = tk.StringVar()
         self.__endPlaceVar = tk.StringVar()
         self.__riverVar = tk.StringVar()
         self.__insertValues(entry)
-        entFrame = tk.Frame(self.__mainFrame)
+        entFrame = tk.Frame(frame)
         entFrame.pack(anchor=tk.N)
         startPlaceLB = tk.Label(entFrame, text="Start Place")
         startPlaceLB.grid(row=0, column=0, padx=5, pady=5)
@@ -110,8 +153,10 @@ Select all activities with same start- and endplace.")
         riverEnt = tk.Entry(entFrame, textvariable=self.__riverVar)
         riverEnt.grid(row=2, column=1, padx=5, pady=5)
 
-    def __addControlButtons(self, multiple=False):
-        btnFrame = tk.Frame(self.__mainFrame)
+    def __addControlButtons(self, multiple=False, frame=None):
+        if not frame:
+            frame = self.__mainFrame
+        btnFrame = tk.Frame(frame)
         btnFrame.pack(anchor=tk.N)
         previousBtn = tk.Button(btnFrame, text="Previous", command=self.__previousEntry)
         previousBtn.grid(row=0, column=0, pady=5, padx=5)

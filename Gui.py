@@ -79,6 +79,24 @@ class MainGui(tk.Tk):
         placeHolderLB = tk.Label(self.__mainFrame, text="Garmin2eFB")
         placeHolderLB.pack()
 
+    def createScrollableFrame(self, topFrame):
+        self.canvas = tk.Canvas(topFrame, width=600, height=800)
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.scrollbar = tk.Scrollbar(topFrame, orient=tk.VERTICAL, command=self.canvas.yview)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.canvas.bind('<Configure>', self.on_canvas_configure)
+
+        scrollableFrame = tk.Frame(self.canvas)
+        self.canvas.create_window((300, 300), window=scrollableFrame, anchor=tk.NW)
+
+        return scrollableFrame
+
+    def on_canvas_configure(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+
     def getStartAndEndDate(self):
         dateSelection = DateSelection(self, "Timeframe Selection")
         return dateSelection.result
@@ -97,13 +115,13 @@ class MainGui(tk.Tk):
         self.__clearMainFrame()
         singleEntriesFrame = tk.Frame(self.__mainFrame)
         singleEntriesFrame.pack(anchor=tk.N)
+        self.__addSingleEntry(entry, singleEntriesFrame, 0, False)
         self.__addEntryFields(entry)
         self.__addControlButtons()
 
     def multipleEntry(self, listOfGarminEntries):
         self.__clearMainFrame()
-        self.__scrollable = Scrollable(self.__mainFrame)
-        self.__scrollable.pack()
+        self.__scrollable = self.createScrollableFrame(self.__mainFrame)
         infoLB = tk.Label(self.__scrollable, 
                           text="\
 There are multiple activities at the same place.\n \
@@ -115,21 +133,11 @@ Select all activities with same start- and endplace.")
         self.__multipleEntriesSelection = []
         row = 1
         for entry in listOfGarminEntries:
-            singleEntry = self.__addSingleEntryToList(entry, multipleEntriesFrame, row)
+            singleEntry = self.__addSingleEntry(entry, multipleEntriesFrame, row)
             self.__multipleEntriesSelection.append(singleEntry)
             row = row+1
-        self.__addEntryFields(listOfGarminEntries[0])
-        self.__addControlButtons(True)
-        self.__scrollable.update()
-        """
-        TODO:
-        entry fields for places/river
-        buttons for previous/single entry/save/next
-        
-        Use the group number from above to make going backwards possible for multiple entries
-
-        Call entry fields from inside main gui to make going back and forth between multiple entries and singlenetries possible
-        """
+        self.__addEntryFields(listOfGarminEntries[0], self.__scrollable)
+        self.__addControlButtons(True, self.__scrollable)
 
     def __addEntryFields(self, entry, frame=None):
         if not frame:
@@ -160,6 +168,9 @@ Select all activities with same start- and endplace.")
         btnFrame.pack(anchor=tk.N)
         previousBtn = tk.Button(btnFrame, text="Previous", command=self.__previousEntry)
         previousBtn.grid(row=0, column=0, pady=5, padx=5)
+        if not multiple:
+            ignoreEntryBtn = tk.Button(btnFrame, text="Ignore Entry", command=self.__ignoreCurrentEntry)
+            ignoreEntryBtn.grid(row=0, column=1, pady=5, padx=5)
         if multiple: 
             saveTogetherBtn = tk.Button(btnFrame, text="Save Selected", command=self.__saveSelected)
             saveTogetherBtn.grid(row=0, column=1, pady=5, padx=5)
@@ -168,9 +179,9 @@ Select all activities with same start- and endplace.")
 
     def __insertValues(self, entry):
         if entry.startPlace:
-            self.__startPlaceVar = entry.startPlace
-            self.__endPlaceVar = entry.endPlace
-            self.__riverVar = entry.river
+            self.__startPlaceVar.set(entry.startPlace)
+            self.__endPlaceVar.set(entry.endPlace)
+            self.__riverVar.set(entry.river)
 
     def __previousEntry(self):
         if (self.__currentMultiEntry>=0) and (self.__currentMultiEntry != len(self.__multiEntries)):
@@ -179,11 +190,11 @@ Select all activities with same start- and endplace.")
                 self.__currentMultiEntry -= 1
                 self.multipleEntry(self.__multiEntries[self.__currentMultiEntry])
         elif self.__currentSingleEntry>0:
-            self.__saveSingleEntry(self.__singleEntries(self.__currentSingleEntry))
+            self.__saveSingleEntry(self.__singleEntries[self.__currentSingleEntry])
             self.__currentSingleEntry -= 1
             self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
         elif self.__currentSingleEntry == 0:
-            self.__saveSingleEntry(self.__singleEntries(self.__currentSingleEntry))
+            self.__saveSingleEntry(self.__singleEntries[self.__currentSingleEntry])
             self.__currentMultiEntry -= 1
             self.multipleEntry(self.__multiEntries[self.__currentMultiEntry])
 
@@ -203,6 +214,12 @@ Select all activities with same start- and endplace.")
             self.__currentSingleEntry+=1
             self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
 
+    def __ignoreCurrentEntry(self):
+        # Todo Remove Entry from list
+        # TOdo make yes no question before deleting
+        # also allow removal of multipe entries
+        pass
+
     def __saveSelected(self):
         leftOverEntries = []
         for entry in self.__multipleEntriesSelection:
@@ -213,8 +230,6 @@ Select all activities with same start- and endplace.")
         if leftOverEntries:
             self.multipleEntry(leftOverEntries)
             return True
-        else:
-            self.__nextEntry()
         return False
 
     def __saveSingleEntry(self, entry):
@@ -225,18 +240,19 @@ Select all activities with same start- and endplace.")
             self.__riverVar.get()
         )
 
-    def __addSingleEntryToList(self, entry, frame, row):
+    def __addSingleEntry(self, entry, frame, row, checkbox=True):
         startDateLB = tk.Label(frame, text=entry.getStartDate())
         startDateLB.grid(row=row, column=0, padx=5, pady=5)
         placeLB = tk.Label(frame, text=entry.getPlace())
         placeLB.grid(row=row, column=1, padx=5, pady=5)
         distanceLB = tk.Label(frame, text=entry.getDistance())
         distanceLB.grid(row=row, column=2, padx=5, pady=5)
-        checkBoxVar = tk.IntVar()
-        checkBoxVar.set(1)
-        checkBox = tk.Checkbutton(frame, text="", onvalue=1, offvalue=0, variable=checkBoxVar)
-        checkBox.grid(row=row, column=3, padx=5, pady=5)
-        return [entry, checkBoxVar]
+        if checkbox:
+            checkBoxVar = tk.IntVar()
+            checkBoxVar.set(1)
+            checkBox = tk.Checkbutton(frame, text="", onvalue=1, offvalue=0, variable=checkBoxVar)
+            checkBox.grid(row=row, column=3, padx=5, pady=5)
+            return [entry, checkBoxVar]
 
     def __addFirstRowMultipleEntry(self, frame):
         startDateLB = tk.Label(frame, text="Start Date")

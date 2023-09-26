@@ -23,6 +23,10 @@ class GarminEntry:
     def getStartDate(self) -> str:
         return self.__startDate.strftime('%d.%m.%Y')
     
+    def getStartDatetime(self) -> datetime.date:
+        return self.__startDate
+
+
     def getDistance(self) -> str:
         return str(self.__distance)
     

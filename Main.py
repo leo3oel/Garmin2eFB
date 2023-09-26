@@ -51,7 +51,6 @@ class Main:
         ignoreList =[]
         for index, entry in enumerate(self.__garminEntries):
             multiEntries = [entry]
-            ignoreList.append(entry)
             for innerLoopIndex in range(index+1, len(self.__garminEntries)):
                 innerEntry = self.__garminEntries[innerLoopIndex]
                 if innerEntry.getPlace() == entry.getPlace() and innerEntry not in ignoreList:
@@ -59,8 +58,11 @@ class Main:
                     ignoreList.append(innerEntry)
             if len(multiEntries) > 1:
                 self.__multiEntries.append(multiEntries)
-            else:
+            elif entry not in ignoreList:
                 self.__singleEntries.append(entry)
+        for entry in self. __multiEntries:
+            entry = sorted(entry, key=lambda x:x.getStartDate(), reverse=True)
+        self.__singleEntries = sorted(self.__singleEntries, key=lambda x:x.getStartDate(), reverse=True)
 
     def __formatDate(self, stringDate) -> datetime.date:
         date = datetime.strptime(stringDate, '%Y-%m-%d %H:%M:%S')

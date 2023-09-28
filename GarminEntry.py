@@ -45,6 +45,7 @@ class GarminEntry:
             'status': self.__status,
             'river': self.river,
             'startPlace': self.startPlace,
-            'endPlace': self.endPlace
+            'endPlace': self.endPlace,
+            'distance': self.__distance
         }
         return efbDict

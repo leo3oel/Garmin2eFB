@@ -15,7 +15,7 @@ class Main:
     def __init__(self) -> None:
         self.__readConfig()
         self.__readGarminFile()
-        self.__mainGui = MainGui()
+        self.__mainGui = MainGui(self.__efbColumns)
         self.__getEntriesToInclude()
         self.__sortEntries()
         self.__mainGui.startUserInput(self.__multiEntries, self.__singleEntries)
@@ -60,9 +60,9 @@ class Main:
                 self.__multiEntries.append(multiEntries)
             elif entry not in ignoreList:
                 self.__singleEntries.append(entry)
-        for entry in self. __multiEntries:
-            entry = sorted(entry, key=lambda x:x.getStartDate(), reverse=True)
-        self.__singleEntries = sorted(self.__singleEntries, key=lambda x:x.getStartDate(), reverse=True)
+        for index, entry in enumerate(self. __multiEntries):
+            self.__multiEntries[index] = sorted(entry, key=lambda x:x.getStartDatetime(), reverse=False)
+        self.__singleEntries = sorted(self.__singleEntries, key=lambda x:x.getStartDatetime(), reverse=False)
 
     def __formatDate(self, stringDate) -> datetime.date:
         date = datetime.strptime(stringDate, '%Y-%m-%d %H:%M:%S')
@@ -74,9 +74,12 @@ class Main:
         return place
 
     def __getEntriesToInclude(self) -> None:
-        return None
         startDate, endDate = self.__mainGui.getStartAndEndDate()
-
+        entriesNeeded = []
+        for entry in self.__garminEntries:
+            if startDate <= entry.getStartDatetime() and entry.getStartDatetime() <= endDate:
+                entriesNeeded.append(entry)
+        self.__garminEntries = entriesNeeded
 
 if __name__ == "__main__":
 

@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
 from datetime import datetime
+from Exporter import Exporter
 
 class Scrollable(tk.Frame):
     """
@@ -71,9 +72,11 @@ class DateSelection(simpledialog.Dialog):
 
 class MainGui(tk.Tk):
 
-    def __init__(self):
+    def __init__(self, eFBColumns):
+        self.__eFBColumns = eFBColumns
         tk.Tk.__init__(self)
         self.title("Garmin2eFB")
+        self.minsize(width=500, height=200)
         self.__mainFrame = tk.Frame(self)
         self.__mainFrame.pack(anchor=tk.CENTER, padx=100, pady=50)
         placeHolderLB = tk.Label(self.__mainFrame, text="Garmin2eFB")
@@ -213,12 +216,23 @@ Select all activities with same start- and endplace.")
             self.__saveSingleEntry(self.__singleEntries[self.__currentSingleEntry])
             self.__currentSingleEntry+=1
             self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
+        elif self.__currentSingleEntry == len(self.__singleEntries)-1:
+            self.__saveSingleEntry(self.__singleEntries[self.__currentSingleEntry])
+            if messagebox.askyesno("Finish Entry", "Do you want to stop the entry and export to csv?"):
+                entries = self.__combineEntries()
+                Exporter.exportToEFB(entries, self.__eFBColumns)
 
     def __ignoreCurrentEntry(self):
-        # Todo Remove Entry from list
-        # TOdo make yes no question before deleting
-        # also allow removal of multipe entries
-        pass
+        if self.__currentMultiEntry < len(self.__multiEntries)-1:
+            self.__multiEntries.pop(self.__currentMultiEntry)
+            self.multipleEntry(self.__multiEntries[self.__currentMultiEntry])
+        elif self.__currentMultiEntry == len(self.__multiEntries)-1:
+            self.__multiEntries.pop(self.__currentMultiEntry)
+            self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
+        elif self.__currentSingleEntry < len(self.__singleEntries)-1:
+            self.__singleEntries.pop(self.__currentSingleEntry)
+            if self.__currentSingleEntry < len(self.__singleEntries):
+                self.singleEntry(self.__singleEntries[self.__currentSingleEntry])
 
     def __saveSelected(self):
         leftOverEntries = []
@@ -269,6 +283,15 @@ Select all activities with same start- and endplace.")
         self.__mainFrame = tk.Frame(self)
         self.__mainFrame.pack()
     
+    def __combineEntries(self) -> list:
+        entriesList = []
+        for multientry in self.__multiEntries:
+            for entry in multientry:
+                entriesList.append(entry)
+        for entry in self.__singleEntries:
+            entriesList.append(entry)
+        sortedEntries = sorted(entriesList, key=lambda x: x.getStartDatetime())
+        return entriesList
 
 if __name__ == "__main__":
     main = MainGui()

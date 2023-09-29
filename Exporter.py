@@ -6,7 +6,7 @@ class Exporter:
     @staticmethod
     def exportToEFB(entries, eFBColumns):
         outputFileName = Exporter.getOutputFilename()
-        with open(outputFileName, 'w', newline='') as outputFile:
+        with open(outputFileName, 'w', newline='', encoding="utf-8") as outputFile:
             writer = csv.writer(outputFile, delimiter=';')
             writer.writerow(Exporter.getFirstLine(eFBColumns))
             for entry in entries:
@@ -29,7 +29,6 @@ class Exporter:
             eFBColumns["river"],
             eFBColumns["startPlace"],
             eFBColumns["endPlace"],
-            eFBColumns["startdate"],
             eFBColumns["distance"]
         ]
         return firstLine

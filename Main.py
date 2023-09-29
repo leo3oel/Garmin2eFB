@@ -23,7 +23,7 @@ class Main:
 
     def __readConfig(self) -> None:
         config = configparser.ConfigParser()
-        config.read('config.ini')
+        config.read('config.ini', encoding="utf-8")
         self.__garminRows = config['garmin.rows']
         self.__activityTypes = config['garmin.activitytypes']['typesToAdd'].split(",")
         self.__efbColumns = config['efbColumns']

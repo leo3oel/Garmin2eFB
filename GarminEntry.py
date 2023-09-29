@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import locale
 
 class GarminEntry:
 
@@ -46,6 +47,6 @@ class GarminEntry:
             'river': self.river,
             'startPlace': self.startPlace,
             'endPlace': self.endPlace,
-            'distance': self.__distance
+            'distance': locale.str(self.__distance)
         }
         return efbDict

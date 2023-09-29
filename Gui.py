@@ -171,14 +171,13 @@ Select all activities with same start- and endplace.")
         btnFrame.pack(anchor=tk.N)
         previousBtn = tk.Button(btnFrame, text="Previous", command=self.__previousEntry)
         previousBtn.grid(row=0, column=0, pady=5, padx=5)
-        if not multiple:
-            ignoreEntryBtn = tk.Button(btnFrame, text="Ignore Entry", command=self.__ignoreCurrentEntry)
-            ignoreEntryBtn.grid(row=0, column=1, pady=5, padx=5)
+        ignoreEntryBtn = tk.Button(btnFrame, text="Ignore Entry", command=self.__ignoreCurrentEntry)
+        ignoreEntryBtn.grid(row=0, column=1, pady=5, padx=5)
         if multiple: 
             saveTogetherBtn = tk.Button(btnFrame, text="Save Selected", command=self.__saveSelected)
-            saveTogetherBtn.grid(row=0, column=1, pady=5, padx=5)
+            saveTogetherBtn.grid(row=0, column=2, pady=5, padx=5)
         nextBtn = tk.Button(btnFrame, text="Next", command=self.__nextEntry)
-        nextBtn.grid(row=0, column=2, pady=5, padx=5)
+        nextBtn.grid(row=0, column=3, pady=5, padx=5)
 
     def __insertValues(self, entry):
         if entry.startPlace:
@@ -221,6 +220,7 @@ Select all activities with same start- and endplace.")
             if messagebox.askyesno("Finish Entry", "Do you want to stop the entry and export to csv?"):
                 entries = self.__combineEntries()
                 Exporter.exportToEFB(entries, self.__eFBColumns)
+                self.quit()
 
     def __ignoreCurrentEntry(self):
         if self.__currentMultiEntry < len(self.__multiEntries)-1:
